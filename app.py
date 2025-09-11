@@ -7,7 +7,8 @@ from plotly.subplots import make_subplots
 
 from bdm import BirthDeathMigration, HistoryTracker, ConfigEvaluator, BDM_states
 from helper import acf_plot, cummean, mcmc_mean_variance_estimator
-from point_process import StraussDensity, SaturatedDensity
+from point_process import StraussDensity, SaturatedDensity, PoissonDensity, HardcoreDensity
+
 
 def merge_figure_traces(main_fig, fig):
     for trace in fig["data"]:
@@ -24,18 +25,24 @@ class SimulationApp:
 
     def get_user_inputs(self):
         st.sidebar.subheader("Density Parameters")
-        density_select = st.sidebar.selectbox("Select point process", ("Strauss", "Saturated Density"))
+        density_select = st.sidebar.selectbox("Select point process", ("Poisson", "Hardcore", "Strauss", "Saturated Density"))
 
-        R = st.sidebar.number_input("R", 0.0, None, 1.0)
         beta = st.sidebar.number_input("Beta", 0.0, None, 10.0)
 
+        if density_select == "Poisson":
 
+            density = PoissonDensity(beta)
+        if density_select == "Hardcore":
+            R = st.sidebar.number_input("R", 0.0, None, 2.0)
+            density = HardcoreDensity(beta, R)
         if density_select == "Strauss":
-            gamma = st.sidebar.number_input("Gamma", 0.0, 1.0, 1.0)
+            R = st.sidebar.number_input("R", 0.0, None, 2.0)
+            gamma = st.sidebar.number_input("Gamma", 0.0, 1.0, 0.99)
             density = StraussDensity(R, beta, gamma)
 
         if density_select == "Saturated Density":
-            gamma = st.sidebar.number_input("Gamma", 0.0, None, 1.0)
+            R = st.sidebar.number_input("R", 0.0, None, 2.0)
+            gamma = st.sidebar.number_input("Gamma", 0.0, None, 1.5)
             saturation = st.sidebar.number_input("Saturation", 0, None, 0)
             density = SaturatedDensity(R, beta, gamma, saturation)
 
@@ -171,8 +178,13 @@ class SimulationApp:
     def run(self):
         inputs = self.get_user_inputs()
         tab1, tab2, tab3 = st.tabs(["Points", "Number of points statistics", "Acceptance Analysis"])
+
         if st.sidebar.button("Run Simulation"):
             self.run_simulation(**inputs)
+
+        if st.sidebar.button("Clear"):
+            for state in self.session_states_names:
+                st.session_state[state] = None
 
         if st.session_state.configs is not None:
             with tab1:

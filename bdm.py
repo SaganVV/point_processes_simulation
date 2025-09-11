@@ -1,9 +1,7 @@
 import numpy as np
 from kernels import StatesKernelSampler, RectangleKernelSampler, IndexDiscreteSampler, CompositeKernelSampler
 from kernels import uniform_probs
-from point_process import StraussDensity
-# import seaborn as sns
-# import pandas as pd
+
 from enum import Enum
 
 class BDM_states(Enum):
@@ -136,7 +134,6 @@ class HistoryTracker:
         self.were_accepted = [] if track_were_accepted else None
         self.configs = [] if track_configs else None
     def __call__(self, new_state, old_config, new_config, acceptance_probability, is_accepted, reconstruction_params=None):
-       # print(new_state, old_config, new_config, acceptance_probability, is_accepted, reconstruction_params)
 
         if self.states is not None:
             self.states.append(new_state)
@@ -155,28 +152,3 @@ class ConfigEvaluator:
 
         self.values.append(self.func(new_config) if is_accepted else self.func(old_config))
 
-if __name__ == "__main__":
-    R = 0.5
-    beta = 100
-    gamma = 1.2
-    strauss_density = StraussDensity(R, beta, gamma)
-    bdm = BirthDeathMigration(strauss_density)
-
-    tracker = HistoryTracker()
-    num_of_points = ConfigEvaluator(function=lambda config: len(config))
-    for (i, state) in enumerate(bdm.run(num_iter=10000, callbacks=[tracker, num_of_points])):
-        pass
-
-    history_pd = pd.DataFrame({"iter": range(len(tracker.states)), "states": tracker.states, "num_of_points": num_of_points.values, "acceptance": tracker.acc_probs, "is_accepted": tracker.were_accepted})
-    print(history_pd.head(100))
-    fig, axs = plt.subplots(2, 2)
-    sns.lineplot(history_pd["num_of_points"], ax=axs[0, 0])
-    sns.lineplot(cummean(history_pd.num_of_points), ax=axs[0, 0])
-    sns.histplot(history_pd["num_of_points"], ax=axs[0, 1])
-    sns.scatterplot(history_pd, x="iter", y="acceptance", hue=history_pd["states"], ax=axs[1, 0])
-    for state in [BDM_states.BIRTH, BDM_states.DEATH, BDM_states.MIGRATION]:
-        state_hist = history_pd[history_pd["states"] == state]
-        sns.lineplot(cummean(state_hist.acceptance), ax=axs[1,1], label=str(state))
-    sns.lineplot(cummean(history_pd.acceptance), ax=axs[1,1], label="overall")
-    plt.tight_layout()
-    plt.show()
