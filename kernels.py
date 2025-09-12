@@ -3,8 +3,10 @@ import numpy as np
 import warnings
 from regions import Region, Rectangle
 
+
 def uniform_probs(config):
     return np.ones(len(config)) / len(config)
+
 
 class StaticOrDynamic:
     def __init__(self, value):
@@ -18,18 +20,17 @@ class StaticOrDynamic:
     def __call__(self, *args, **kwargs):
         return self._fn(*args, **kwargs) if self._fn is not None else self._value
 
+
 class KernelSampler:
     def __init__(self, rng=None, seed=None):
         self.rng = np.random.default_rng(seed) if rng is None else rng
 
-    def likelihood(self, config=None, value=None):
-        ...
+    def likelihood(self, config=None, value=None): ...
 
-    def conditional_density(self, config=None):
-        ...
+    def conditional_density(self, config=None): ...
 
-    def sample(self, config=None, size=1):
-        ...
+    def sample(self, config=None, size=1): ...
+
 
 class UniformKernelSampler(KernelSampler):
     def __init__(self, region: Region, rng=None, seed=None):
@@ -43,14 +44,21 @@ class UniformKernelSampler(KernelSampler):
     def conditional_density(self, config=None):
         return self.density
 
+
 class RectangleKernelSampler(UniformKernelSampler):
     def __init__(self, x=0, y=0, width=1, height=1, rng=None, seed=None):
         region = Rectangle(x, y, width, height)
         super().__init__(region, rng, seed)
+
     def sample(self, config=None, size=1):
-        xs = np.random.uniform(self.region.bottomleft_x, self.region.topright_x, size=size)
-        ys = np.random.uniform(self.region.bottomleft_y, self.region.topright_y, size=size)
+        xs = np.random.uniform(
+            self.region.bottomleft_x, self.region.topright_x, size=size
+        )
+        ys = np.random.uniform(
+            self.region.bottomleft_y, self.region.topright_y, size=size
+        )
         return np.array((xs, ys)).transpose()
+
 
 class IndexDiscreteSampler(KernelSampler):
     def __init__(self, density, rng=None, seed=None):
@@ -83,7 +91,9 @@ class IndexDiscreteSampler(KernelSampler):
 class StatesKernelSampler(KernelSampler):
     def __init__(self, states, density, rng=None, seed=None):
         super().__init__(rng, seed)
-        self.states = StaticOrDynamic(states if callable(states) else np.asarray(states))
+        self.states = StaticOrDynamic(
+            states if callable(states) else np.asarray(states)
+        )
         self.index_sampler = IndexDiscreteSampler(density, rng=self.rng)
 
     @classmethod
@@ -121,6 +131,7 @@ class StatesKernelSampler(KernelSampler):
     def conditional_density(self, config=None):
         return self.index_sampler.conditional_density(config=config)
 
+
 class CompositeKernelSampler(KernelSampler):
     def __init__(self, kernels, probs, rng=None, seed=None):
         super().__init__(rng, seed)
@@ -139,11 +150,16 @@ class CompositeKernelSampler(KernelSampler):
         kernels = self.kernels(config)
         idx = self.kernels_sampler.sample(config=config, size=size)
 
-        samples = [(i, kernels[i].sample(config=config, size=1)[0]) for i in np.atleast_1d(idx)]
+        samples = [
+            (i, kernels[i].sample(config=config, size=1)[0]) for i in np.atleast_1d(idx)
+        ]
         return samples
 
+
 if __name__ == "__main__":
-    dcs = StatesKernelSampler(states=[1, 2, 5, 4], density=lambda config: config / np.sum(config))
+    dcs = StatesKernelSampler(
+        states=[1, 2, 5, 4], density=lambda config: config / np.sum(config)
+    )
     print(dcs.sample(config=[1, 2, 3], size=10))
     print(dcs.likelihood_idx(config=[1, 2, 3, 4], value=1))
     print(dcs.conditional_density(config=[1, 2, 35]))

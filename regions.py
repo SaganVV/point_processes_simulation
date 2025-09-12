@@ -1,8 +1,7 @@
 class Region:
-    def __contains__(self, point):
-        ...
-    def size(self):
-        ...
+    def __contains__(self, point): ...
+    def size(self): ...
+
 
 class Rectangle(Region):
 
@@ -14,9 +13,13 @@ class Rectangle(Region):
         self.topright_y = max(y1, y2)
 
     def __contains__(self, point):
-        return (self.bottomleft_x <= point[0] <= self.topright_x) and (self.bottomleft_y <= point[1] <= self.topright_y)
+        return (self.bottomleft_x <= point[0] <= self.topright_x) and (
+            self.bottomleft_y <= point[1] <= self.topright_y
+        )
 
     def size(self):
         if not hasattr(self, "cache_size"):
-            self.cache_size = (self.topright_x - self.bottomleft_x) * (self.topright_y - self.bottomleft_y)
+            self.cache_size = (self.topright_x - self.bottomleft_x) * (
+                self.topright_y - self.bottomleft_y
+            )
         return self.cache_size
