@@ -51,10 +51,10 @@ class RectangleKernelSampler(UniformKernelSampler):
         super().__init__(region, rng, seed)
 
     def sample(self, config=None, size=1):
-        xs = np.random.uniform(
+        xs = self.rng.uniform(
             self.region.bottomleft_x, self.region.topright_x, size=size
         )
-        ys = np.random.uniform(
+        ys = self.rng.uniform(
             self.region.bottomleft_y, self.region.topright_y, size=size
         )
         return np.array((xs, ys)).transpose()

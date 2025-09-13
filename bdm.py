@@ -31,13 +31,11 @@ class BirthDeathMigration:
         seed=None,
     ):
         self.rng = rng if rng else np.random.default_rng(seed)
-
         if new_point_sampler is None:
-            new_point_sampler = RectangleKernelSampler(rng=rng)
-
+            new_point_sampler = RectangleKernelSampler(rng=self.rng)
         if point_to_remove_sampler is None:
             point_to_remove_sampler = IndexDiscreteSampler(
-                density=uniform_probs, rng=rng
+                density=uniform_probs, rng=self.rng
             )
 
         if migration_sampler is None:
@@ -45,17 +43,17 @@ class BirthDeathMigration:
                 config
             )
             migration_sampler = CompositeKernelSampler(
-                kernels=kernels, probs=uniform_probs, rng=rng
+                kernels=kernels, probs=uniform_probs, rng=self.rng
             )
 
         self.density = density
         self.new_point_sampler = new_point_sampler
         self.point_to_remove_sampler = point_to_remove_sampler
         self.state_sampler = (
-            StatesKernelSampler.uniform_over(states=self.STATES, rng=rng)
+            StatesKernelSampler.uniform_over(states=self.STATES, rng=self.rng)
             if state_sampler_probs is None
             else StatesKernelSampler(
-                states=self.STATES, density=state_sampler_probs, rng=rng
+                states=self.STATES, density=state_sampler_probs, rng=self.rng
             )
         )
         self.migration_sampler = migration_sampler
