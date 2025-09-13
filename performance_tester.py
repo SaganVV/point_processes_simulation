@@ -5,19 +5,21 @@ from cProfile import Profile
 from pstats import SortKey, Stats
 import datetime
 
-test_folder = 'speed_tests\\'
+test_folder = 'performance_results\\'
 if __name__ == "__main__":
     R = 0.1
     beta = 100
     gamma = 0.5
-    strauss_density = PoissonDensity(beta)#StraussDensity(R, beta, gamma)
+    random_seed = 42
+    strauss_density = StraussDensity(R, beta, gamma)
     print(strauss_density)
     num_iter = 20000
-    bdm = BirthDeathMigration(strauss_density)
+    bdm = BirthDeathMigration(strauss_density, seed=random_seed)
 
     tracker = HistoryTracker()
     num_of_points = ConfigEvaluator(function=lambda config: len(config))
     filename = test_folder + f"func=bdm.run;num_iter={num_iter};{strauss_density!r};{datetime.datetime.now().strftime("%d-%m-%Y;%H-%M-%S")}.txt"
+    print(filename)
     with Profile() as profile:
         for i, state in enumerate(
             bdm.run(num_iter=num_iter, callbacks=[tracker, num_of_points])

@@ -22,8 +22,7 @@ class PointProcessDensity:
     def __call__(self, config):
         ...
     def parangelou(self, config, new_point):
-        new_config = np.copy(config)
-        new_config = np.concatenate((new_config, new_point), axis=0)
+        new_config = np.vstack([config, new_point])
         return self(new_config) / self(config)
 
 class PoissonDensity(PointProcessDensity):
@@ -53,7 +52,9 @@ class StraussDensity(PointProcessDensity):
             raise ValueError("Gamma must be in range (0, 1)")
 
         self.log_beta = np.log(beta)
+        self.beta = beta
         self.log_gamma = np.log(gamma)
+        self.gamma = gamma
 
     def _interaction_statistic(self, config):
         return total_num_of_neighbors(config, self.R)
@@ -66,8 +67,14 @@ class StraussDensity(PointProcessDensity):
 
         return res * np.exp(self.log_gamma * inter)
 
+    def parangelou(self, config, new_point):
+        if config.size == 0:
+            return self.beta
+        dist = np.sum((config - new_point)**2, axis=1)
+        return self.beta * np.exp(self.log_gamma * np.sum(dist < self.R**2))
+
     def __repr__(self):
-        return f"""{self.__class__.__name__}(beta={np.exp(self.log_beta)},R={self.R},gamma={np.exp(self.log_gamma)})"""
+        return f"""{self.__class__.__name__}(beta={self.beta},R={self.R},gamma={self.gamma})"""
 
 
 class SaturatedDensity(PointProcessDensity):
@@ -79,7 +86,9 @@ class SaturatedDensity(PointProcessDensity):
         if gamma <= 0:
             raise ValueError("Gamma must be positive")
         self.log_beta = np.log(beta)
+        self.beta = beta
         self.log_gamma = np.log(gamma)
+        self.gamma = gamma
         self.saturation = saturation
 
     def _interaction_statistic(self, config):
@@ -93,6 +102,12 @@ class SaturatedDensity(PointProcessDensity):
 
         second_order_log = self.log_gamma * inter
         return res * np.exp(second_order_log)
+
+    def parangelou(self, config, new_point):
+        if config.size == 0:
+            return self.beta
+        dist = np.sqrt(np.sum((config - new_point)**2, axis=1))
+        return self.beta * np.exp(self.log_gamma * min(self.saturation, np.sum(dist < self.R ** 2)))
 
     def __repr__(self):
         return f"""{self.__class__.__name__}(beta={np.exp(self.log_beta)},R={self.R},gamma={np.exp(self.log_gamma)},saturation={self.saturation})"""

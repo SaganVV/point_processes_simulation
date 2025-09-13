@@ -119,13 +119,27 @@ class BirthDeathMigration:
     def step_with_reconstruction(self, config=None):
         return self._step_core(config, with_reconstruction=True)
 
+    def __h_birth(self, config, new_config):
+        h = (
+            self.density.parangelou(config, new_config[-1])
+            * self.state_sampler.likelihood(new_config, BDM_states.DEATH)
+            / self.state_sampler.likelihood(config, BDM_states.BIRTH)
+            * self.point_to_remove_sampler.likelihood(new_config, len(new_config)-1)
+            / self.new_point_sampler.likelihood(config, new_config[-1])
+        )
+        return h
+    def __h_death(self, config, new_config):
+        return 1 / self.__h_birth(new_config, config)
+
     def __h(self, config, new_config, point_idx):
+
         if len(config) > len(new_config):
             return 1 / self.__h(new_config, config, point_idx)
 
         h = (
             self.density(new_config)
             / self.density(config)
+           # self.density.parangelou(config, new_config[point_idx])
             * self.state_sampler.likelihood(new_config, BDM_states.DEATH)
             / self.state_sampler.likelihood(config, BDM_states.BIRTH)
             * self.point_to_remove_sampler.likelihood(new_config, point_idx)
@@ -140,7 +154,8 @@ class BirthDeathMigration:
         new_config = np.vstack((config, new_point))
 
         acceptance_probability = min(
-            1, self.__h(config, new_config, len(config))
+            1, self.__h_birth(config, new_config)
+          #  1, self.__h(config, new_config, len(config))
         )  # Don't like it, new_point[0]
         return new_config, acceptance_probability, (new_point, )
 
@@ -149,9 +164,11 @@ class BirthDeathMigration:
             return config, 0, ()
         point_idx = self.point_to_remove_sampler.sample(config)[0].item()
 
-        new_config = np.delete(config, point_idx, axis=0)
-
-        return new_config, min(1, self.__h(config, new_config, point_idx)), (point_idx,)
+        #new_config = np.delete(config, point_idx, axis=0)
+        new_config = config.copy()
+        new_config[point_idx] = new_config[-1]
+        new_config = config[:-1]
+        return new_config, min(1, self.__h_death(config, new_config)), (point_idx,)
 
     def migration_step(self, config):
         if len(config) == 0:
