@@ -1,7 +1,7 @@
 import numpy as np
 
 import warnings
-from regions import Region, Rectangle
+from src.regions import Region, Rectangle
 
 
 def uniform_probs(config):
@@ -157,9 +157,17 @@ class CompositeKernelSampler(KernelSampler):
 
 
 if __name__ == "__main__":
-    dcs = StatesKernelSampler(
-        states=[1, 2, 5, 4], density=lambda config: config / np.sum(config)
-    )
-    print(dcs.sample(config=[1, 2, 3], size=10))
-    print(dcs.likelihood_idx(config=[1, 2, 3, 4], value=1))
-    print(dcs.conditional_density(config=[1, 2, 35]))
+    # dcs = StatesKernelSampler(
+    #     states=[1, 2, 5, 4], density=lambda config: config / np.sum(config)
+    # )
+    dcs = StatesKernelSampler.uniform_over(states=[0, 1, 2])
+    # print(dcs.sample(config=[1, 2, 3], size=10))
+    # print(dcs.likelihood_idx(config=[1, 2, 3, 4], value=1))
+    # print(dcs.conditional_density(config=[1, 2, 35]))
+
+    from cProfile import Profile
+    from pstats import SortKey, Stats
+    with Profile() as profile:
+        for i in range(20000):
+            dcs.sample(config=[1, 2, 3], size=1)
+        (Stats(profile).strip_dirs().sort_stats(SortKey.TIME).print_stats())

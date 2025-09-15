@@ -5,9 +5,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from bdm import BirthDeathMigration, HistoryTracker, ConfigEvaluator, BDM_states
-from helper import acf_plot, cummean, mcmc_mean_variance_estimator
-from point_process import (
+from src.bdm import BirthDeathMigration, HistoryTracker, ConfigEvaluator, BDM_states
+from src.helper import acf_plot, cummean, mcmc_mean_variance_estimator
+from src.point_process import (
     StraussDensity,
     SaturatedDensity,
     PoissonDensity,

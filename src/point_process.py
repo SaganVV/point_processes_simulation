@@ -1,5 +1,4 @@
 import numpy as np
-from functools import lru_cache
 
 def num_of_neighbors(config, R):
     # Two vertices are neighbors if the distance between them is less than R
@@ -19,11 +18,18 @@ def saturated_interaction_statistic(config, R, saturation_parameter):
 
 class PointProcessDensity:
 
-    def __call__(self, config):
-        ...
-    def parangelou(self, config, new_point):
+    def __call__(self, config) -> float:
+        return np.exp(self.log_density(config))
+
+    def log_density(self, config) -> float:
+        raise NotImplementedError("Log density not implemented")
+
+    def log_parangelou(self, config, new_point) -> float:
         new_config = np.vstack([config, new_point])
-        return self(new_config) / self(config)
+        return self.log_density(new_config) - self.log_density(config)
+
+    def parangelou(self, config, new_point) -> float:
+        return np.exp(self.log_parangelou(config, new_point))
 
 class PoissonDensity(PointProcessDensity):
     def __init__(self, beta):
@@ -32,14 +38,17 @@ class PoissonDensity(PointProcessDensity):
         self.log_beta = np.log(beta)
         self.beta = beta
 
-    def __call__(self, config):
-        return np.exp(self.log_beta * len(config))
+    def log_density(self, config):
+        return self.log_beta * len(config)
+
+    def log_parangelou(self, config, new_point):
+        return self.log_beta
 
     def parangelou(self, config, new_point):
         return self.beta
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(beta={np.exp(self.log_beta)})"
+        return f"{self.__class__.__name__}(beta={self.beta})"
 
 
 class StraussDensity(PointProcessDensity):
@@ -59,19 +68,22 @@ class StraussDensity(PointProcessDensity):
     def _interaction_statistic(self, config):
         return total_num_of_neighbors(config, self.R)
 
-    def __call__(self, config):
+    def log_density(self, config):
         n = len(config)
 
-        res = np.exp(self.log_beta * n)
+        res = self.log_beta * n
         inter = self._interaction_statistic(config)
 
-        return res * np.exp(self.log_gamma * inter)
+        return res + self.log_gamma * inter
+
+    def log_parangelou(self, config, new_point):
+        if config.size == 0:
+            return self.log_beta
+        dist = np.sum((config - new_point)**2, axis=1)
+        return self.log_beta + self.log_gamma * np.sum(dist < self.R**2)
 
     def parangelou(self, config, new_point):
-        if config.size == 0:
-            return self.beta
-        dist = np.sum((config - new_point)**2, axis=1)
-        return self.beta * np.exp(self.log_gamma * np.sum(dist < self.R**2))
+        return np.exp(self.log_parangelou(config, new_point))
 
     def __repr__(self):
         return f"""{self.__class__.__name__}(beta={self.beta},R={self.R},gamma={self.gamma})"""
@@ -80,6 +92,7 @@ class StraussDensity(PointProcessDensity):
 class SaturatedDensity(PointProcessDensity):
 
     def __init__(self, R, beta, gamma, saturation):
+        self.R_2 = R ** 2
         self.R = R
         if beta <= 0:
             raise ValueError("Beta must be positive")
@@ -94,23 +107,17 @@ class SaturatedDensity(PointProcessDensity):
     def _interaction_statistic(self, config):
         return saturated_interaction_statistic(config, self.R, self.saturation)
 
-    def __call__(self, config):
+    def log_density(self, config) -> float:
         n = len(config)
 
-        res = np.exp(self.log_beta * n)
+        res = self.log_beta * n
         inter = self._interaction_statistic(config)
 
         second_order_log = self.log_gamma * inter
-        return res * np.exp(second_order_log)
-
-    def parangelou(self, config, new_point):
-        if config.size == 0:
-            return self.beta
-        dist = np.sqrt(np.sum((config - new_point)**2, axis=1))
-        return self.beta * np.exp(self.log_gamma * min(self.saturation, np.sum(dist < self.R ** 2)))
+        return res + second_order_log
 
     def __repr__(self):
-        return f"""{self.__class__.__name__}(beta={np.exp(self.log_beta)},R={self.R},gamma={np.exp(self.log_gamma)},saturation={self.saturation})"""
+        return f"""{self.__class__.__name__}(beta={self.beta},R={np.sqrt(self.R_2)},gamma={self.gamma},saturation={self.saturation})"""
 
 
 class HardcoreDensity(PointProcessDensity):
@@ -118,15 +125,14 @@ class HardcoreDensity(PointProcessDensity):
         self.log_beta = np.log(beta)
         self.R = R
 
-    def __call__(self, config):
+    def log_density(self, config):
         inter = total_num_of_neighbors(config, self.R)
         if inter > 0:
-            return 0
-        return np.exp(self.log_beta * len(config))
+            return -np.inf
+        return self.log_beta * len(config)
 
     def __repr__(self):
         return f"""{self.__class__.__name__}(beta={np.exp(self.log_beta)}, R={self.R})"""
-
 
 if __name__ == "__main__":
     R = 1.1

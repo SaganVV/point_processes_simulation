@@ -1,11 +1,11 @@
 import numpy as np
-from kernels import (
+from src.kernels import (
     StatesKernelSampler,
     RectangleKernelSampler,
     IndexDiscreteSampler,
     CompositeKernelSampler,
 )
-from kernels import uniform_probs
+from src.kernels import uniform_probs
 
 from enum import Enum
 
@@ -67,18 +67,20 @@ class BirthDeathMigration:
     def run(self, num_iter, warm_up=0, callbacks=None):
         if callbacks is None:
             callbacks = []
+        states = self.state_sampler.sample(size=warm_up + num_iter) # wrong, if states not static.
         for i in range(warm_up):
-            self.step()
-        for i in range(num_iter):
-            args = self.step_with_reconstruction()
+            self.step(new_state=states[i])
+        for i in range(warm_up, num_iter):
+            args = self.step_with_reconstruction(new_state=states[i])
             for cb in callbacks:
                 cb(*args)
             yield args[1] if args[4] else args[2]
 
-    def _propose_core(self, config=None):
+    def _propose_core(self, config=None, new_state=None):
         if config is None:
             config = self.config
-        new_state = self.state_sampler.sample(config, size=1)[0]
+        if new_state is None:
+            new_state = self.state_sampler.sample(config, size=1)[0]
         new_config, acceptance_probability, reconstruction_params = self.bdm[new_state](
             config
         )
@@ -91,8 +93,8 @@ class BirthDeathMigration:
     def propose_with_reconstruction(self, config=None):
         return self._propose_core(config)
 
-    def _step_core(self, config=None, with_reconstruction=False):
-        result = self._propose_core(config)
+    def _step_core(self, config=None, with_reconstruction=False, new_state=None):
+        result = self._propose_core(config, new_state)
         new_state, new_config, acceptance_probability, reconstruction_params = result
         is_accepted = self.rng.uniform() <= acceptance_probability
         if config is None:
@@ -111,11 +113,11 @@ class BirthDeathMigration:
         else:
             return new_state, config, new_config, acceptance_probability, is_accepted
 
-    def step(self, config=None):
-        return self._step_core(config, with_reconstruction=False)
+    def step(self, config=None, new_state=None):
+        return self._step_core(config, with_reconstruction=False, new_state=new_state)
 
-    def step_with_reconstruction(self, config=None):
-        return self._step_core(config, with_reconstruction=True)
+    def step_with_reconstruction(self, config=None, new_state=None):
+        return self._step_core(config, with_reconstruction=True, new_state=new_state)
 
     def __h_birth(self, config, new_config):
         h = (
@@ -126,25 +128,9 @@ class BirthDeathMigration:
             / self.new_point_sampler.likelihood(config, new_config[-1])
         )
         return h
+
     def __h_death(self, config, new_config):
         return 1 / self.__h_birth(new_config, config)
-
-    def __h(self, config, new_config, point_idx):
-
-        if len(config) > len(new_config):
-            return 1 / self.__h(new_config, config, point_idx)
-
-        h = (
-            self.density(new_config)
-            / self.density(config)
-           # self.density.parangelou(config, new_config[point_idx])
-            * self.state_sampler.likelihood(new_config, BDM_states.DEATH)
-            / self.state_sampler.likelihood(config, BDM_states.BIRTH)
-            * self.point_to_remove_sampler.likelihood(new_config, point_idx)
-            / self.new_point_sampler.likelihood(config, new_config[point_idx])
-        )
-
-        return h
 
     def birth_step(self, config=np.empty(shape=(0, 2))):
         new_point = self.new_point_sampler.sample(config)[0]
@@ -153,16 +139,13 @@ class BirthDeathMigration:
 
         acceptance_probability = min(
             1, self.__h_birth(config, new_config)
-          #  1, self.__h(config, new_config, len(config))
-        )  # Don't like it, new_point[0]
+        )
         return new_config, acceptance_probability, (new_point, )
 
     def death_step(self, config):
         if len(config) == 0:
             return config, 0, ()
         point_idx = self.point_to_remove_sampler.sample(config)[0].item()
-
-        #new_config = np.delete(config, point_idx, axis=0)
         new_config = config.copy()
         new_config[point_idx] = new_config[-1]
         new_config = config[:-1]
@@ -172,18 +155,20 @@ class BirthDeathMigration:
         if len(config) == 0:
             return config, 0, ()
         point_idx, new_point = self.migration_sampler.sample(config=config, size=1)[0]
+        config[[point_idx, -1]] = config[[-1, point_idx]] #swap
         new_config = config.copy()
-        new_config[point_idx] = new_point
+        new_config[-1] = new_point
 
         h = (
-            self.density(new_config)
-            / self.density(config)
-            * self.migration_sampler.likelihood(
+            self.density.log_parangelou(config[:-1], new_point)
+             - self.density.log_parangelou(config[:-1], config[-1])
+
+            + np.log(self.migration_sampler.likelihood(
                 new_config, point_idx, config[point_idx]
             )
-            / self.migration_sampler.likelihood(config, point_idx, new_point)
+            / self.migration_sampler.likelihood(config, point_idx, new_point))
         )
-        acceptance_probability = min(1, h)
+        acceptance_probability = np.exp(min(0, h))
 
         return new_config, acceptance_probability, (point_idx, new_point)
 
