@@ -1,4 +1,4 @@
-from src.point_process import StraussDensity
+from src.point_process import StraussDensity, PoissonDensity, SaturatedDensity
 from src.bdm import BirthDeathMigration, HistoryTracker, ConfigEvaluator
 
 from cProfile import Profile
@@ -10,11 +10,12 @@ if __name__ == "__main__":
     R = 0.1
     beta = 100
     gamma = 0.5
+    gamma_saturated = 1.2
     saturation = 3
     random_seed = 42
-    #strauss_density = PoissonDensity(beta=beta)
-   # strauss_density = SaturatedDensity(R, beta, gamma, saturation)
-    strauss_density = StraussDensity(R, beta, gamma)
+    strauss_density = PoissonDensity(beta=beta)
+    #strauss_density = SaturatedDensity(R, beta, gamma=gamma_saturated, saturation=saturation)
+    #strauss_density = StraussDensity(R, beta, gamma)
     print(strauss_density)
     num_iter = 40000
     bdm = BirthDeathMigration(strauss_density, seed=random_seed)

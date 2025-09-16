@@ -1,18 +1,24 @@
 import numpy as np
+from numba import njit, prange
 
-def num_of_neighbors(config, R):
-    # Two vertices are neighbors if the distance between them is less than R
-    return (
-        np.sum(
-            np.linalg.norm(config[:, None, :] - config[None, :, :], axis=-1) < R, axis=1
-        )
-        - 1
-    )
+@njit(cache=True, parallel=True)
+def num_of_neighbors(config : np.ndarray, R:float) -> np.ndarray:
+    n = config.shape[0]
+    counts = np.zeros(n, dtype=np.int32)
+    R_2 = R ** 2
+    for i in prange(n):
+        c = 0
+        for j in range(n):
+            c += np.sum((config[i] - config[j]) ** 2) < R_2
+        counts[i] = c-1
+    return counts
 
-def total_num_of_neighbors(config, R):
-    return np.sum(num_of_neighbors(config, R)).item() // 2
+@njit(cache=True)
+def total_num_of_neighbors(config : np.ndarray, R:float) -> int:
+    return np.sum(num_of_neighbors(config, R)) // 2
 
-def saturated_interaction_statistic(config, R, saturation_parameter):
+@njit(cache=True)
+def saturated_interaction_statistic(config: np.ndarray, R:float, saturation_parameter:float) -> int:
     neighbors = num_of_neighbors(config, R)
     return np.sum(np.minimum(neighbors, saturation_parameter))
 
@@ -31,6 +37,14 @@ class PointProcessDensity:
     def parangelou(self, config, new_point) -> float:
         return np.exp(self.log_parangelou(config, new_point))
 
+    def log_mixed_parangelou(self, config:np.ndarray, idx_to_remove, new_point):
+        new_config = config.copy()
+        new_config[idx_to_remove] = new_point
+        return self.log_density(new_config) - self.log_density(config)
+
+    def mixed_parangelou(self, config, idx_to_remove, new_point):
+        return np.exp(self.log_mixed_parangelou(config, idx_to_remove, new_point))
+
 class PoissonDensity(PointProcessDensity):
     def __init__(self, beta):
         if beta <= 0:
@@ -38,7 +52,7 @@ class PoissonDensity(PointProcessDensity):
         self.log_beta = np.log(beta)
         self.beta = beta
 
-    def log_density(self, config):
+    def log_density(self, config: np.ndarray) -> float:
         return self.log_beta * len(config)
 
     def log_parangelou(self, config, new_point):
@@ -82,12 +96,8 @@ class StraussDensity(PointProcessDensity):
         dist = np.sum((config - new_point)**2, axis=1)
         return self.log_beta + self.log_gamma * np.sum(dist < self.R**2)
 
-    def parangelou(self, config, new_point):
-        return np.exp(self.log_parangelou(config, new_point))
-
     def __repr__(self):
         return f"""{self.__class__.__name__}(beta={self.beta},R={self.R},gamma={self.gamma})"""
-
 
 class SaturatedDensity(PointProcessDensity):
 
@@ -117,7 +127,7 @@ class SaturatedDensity(PointProcessDensity):
         return res + second_order_log
 
     def __repr__(self):
-        return f"""{self.__class__.__name__}(beta={self.beta},R={np.sqrt(self.R_2)},gamma={self.gamma},saturation={self.saturation})"""
+        return f"""{self.__class__.__name__}(beta={self.beta},R={self.R},gamma={self.gamma},saturation={self.saturation})"""
 
 
 class HardcoreDensity(PointProcessDensity):
@@ -135,9 +145,9 @@ class HardcoreDensity(PointProcessDensity):
         return f"""{self.__class__.__name__}(beta={np.exp(self.log_beta)}, R={self.R})"""
 
 if __name__ == "__main__":
-    R = 1.1
-    beta = 0.1
-    gamma = 0
+    R = 0.1
+    beta = 100
+    gamma = 0.5
     # saturation = 1
     strauss = StraussDensity(R, beta, gamma)
     config = np.array([[0, 0], [1, 0], [0, 1]])

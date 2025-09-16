@@ -59,24 +59,27 @@ class RectangleKernelSampler(UniformKernelSampler):
         )
         return np.array((xs, ys)).transpose()
 
-
 class IndexDiscreteSampler(KernelSampler):
-    def __init__(self, density, rng=None, seed=None):
+    def __init__(self, density=None, rng=None, seed=None):
         super().__init__(rng, seed)
         self.density = StaticOrDynamic(density)
+        # self.n = StaticOrDynamic(n)
 
     def get_density(self, config=None):
         return self.density(config)
 
     @classmethod
-    def uniform_over(cls, n, seed=None):
+    def uniform_over(cls, n, rng=None, seed=None):
         density = np.ones(n) / n
-        return cls(density=density, seed=seed)
+        return cls(density=density, rng=rng, seed=seed)
 
-    def sample(self, config=None, size=1, density=None):
-        if density is None:
-            density = self.get_density(config)
-        return self.rng.choice(len(density), size=size, p=density)
+    # def sample(self, config=None, size=1):
+    #     density = self.get_density(config=config)
+    #     return self.rng.multinomial(1, size=size, pvals=density)
+    def sample(self, config=None, size=1):
+        density = self.get_density(config=config)
+        onehots = self.rng.multinomial(1, size=size, pvals=density)
+        return onehots.argmax(axis=1)
 
     def likelihood(self, config=None, value=None):
         if isinstance(value, int):
@@ -104,8 +107,8 @@ class StatesKernelSampler(KernelSampler):
     def get_states(self, config=None):
         return self.states(config)
 
-    def sample_idx(self, config=None, size=1, density=None):
-        return self.index_sampler.sample(config=config, size=size, density=density)
+    def sample_idx(self, config=None, size=1):
+        return self.index_sampler.sample(config=config, size=size)
 
     def likelihood_idx(self, config=None, value=0):
         return self.index_sampler.likelihood(config=config, value=value)
@@ -125,7 +128,8 @@ class StatesKernelSampler(KernelSampler):
             warnings.warn("Extra states beyond density length will be ignored.")
         if len(states) < len(density):
             raise ValueError("Density refers to more states than provided.")
-        idx = self.sample_idx(config=config, size=size, density=density)
+        #print(states, density)
+        idx = self.sample_idx(config=config, size=size)
         return states[idx]
 
     def conditional_density(self, config=None):
@@ -161,6 +165,8 @@ if __name__ == "__main__":
     #     states=[1, 2, 5, 4], density=lambda config: config / np.sum(config)
     # )
     dcs = StatesKernelSampler.uniform_over(states=[0, 1, 2])
+    #dcs = IndexDiscreteSampler.uniform_over(n=3)
+
     # print(dcs.sample(config=[1, 2, 3], size=10))
     # print(dcs.likelihood_idx(config=[1, 2, 3, 4], value=1))
     # print(dcs.conditional_density(config=[1, 2, 35]))
@@ -169,5 +175,6 @@ if __name__ == "__main__":
     from pstats import SortKey, Stats
     with Profile() as profile:
         for i in range(20000):
-            dcs.sample(config=[1, 2, 3], size=1)
+           dcs.sample(config=[1, 2, 3], size=1)
+      #  dcs.sample(config=[1, 2, 3], size=20000)
         (Stats(profile).strip_dirs().sort_stats(SortKey.TIME).print_stats())
