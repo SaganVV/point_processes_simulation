@@ -1,4 +1,4 @@
-from src.point_process import StraussDensity, PoissonDensity, SaturatedDensity
+from src.densities import StraussDensity, PoissonDensity, SaturatedDensity
 from src.bdm import BirthDeathMigration, HistoryTracker, ConfigEvaluator
 
 from cProfile import Profile
