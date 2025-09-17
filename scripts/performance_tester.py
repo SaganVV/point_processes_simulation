@@ -1,5 +1,5 @@
-from src.densities import StraussDensity, PoissonDensity, SaturatedDensity
-from src.bdm import BirthDeathMigration, HistoryTracker, ConfigEvaluator
+from src.densities import PoissonDensity
+from src.samplers.bdm import BirthDeathMigration, HistoryTracker, ConfigEvaluator
 
 from cProfile import Profile
 from pstats import SortKey, Stats
@@ -32,9 +32,7 @@ if __name__ == "__main__":
             bdm.run(num_iter=num_iter, callbacks=[tracker, num_of_points])
         ):
             pass
-            # if i % 20 == 19:
-            #     exit()
-            # pass
+
         with open(filename, "w") as file:
             (
                 Stats(profile, stream=file)

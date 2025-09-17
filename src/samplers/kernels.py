@@ -74,9 +74,6 @@ class IndexDiscreteSampler(KernelSampler):
         density = np.ones(n) / n
         return cls(density=density, rng=rng, seed=seed)
 
-    # def sample(self, config=None, size=1):
-    #     density = self.get_density(config=config)
-    #     return self.rng.multinomial(1, size=size, pvals=density)
     def sample(self, config=None, size=1):
         density = self.get_density(config=config)
         onehots = self.rng.multinomial(1, size=size, pvals=density)

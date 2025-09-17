@@ -1,11 +1,11 @@
 import numpy as np
-from src.kernels import (
+from src.samplers.kernels import (
     StatesKernelSampler,
     RectangleKernelSampler,
     IndexDiscreteSampler,
     CompositeKernelSampler,
 )
-from src.kernels import uniform_probs
+from src.samplers.kernels import uniform_probs
 
 from enum import Enum
 

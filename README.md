@@ -14,27 +14,30 @@ This application implements MCMC simulation of spatial point processes, specific
 ## Installation
 
 ### Prerequisites
-- pip or uv package manager
+- [pip](https://pip.pypa.io/) or [uv](https://github.com/astral-sh/uv) package manager
+---
 
 ### Using uv (Recommended)
+
 ```bash
 # Install uv if you haven't already
 pip install uv
-
-# Create virtual environment and install dependencies
+# Create a virtual environment
 uv venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-uv pip install -r requirements.txt
+
+# Install the project in editable (development) mode
+uv pip install -e .
 ```
 
 ### Using pip
 ```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Create a virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
-# Install dependencies
-pip install -r requirements.txt
+# Install the project in editable (development) mode
+pip install -e .
 ```
 
 ## Usage

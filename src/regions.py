@@ -2,7 +2,6 @@ class Region:
     def __contains__(self, point): ...
     def size(self): ...
 
-
 class Rectangle(Region):
 
     def __init__(self, x=0, y=0, width=1, height=1):
