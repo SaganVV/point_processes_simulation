@@ -3,10 +3,11 @@ import numpy as np
 from .base import PointProcessDensity
 from .utils import saturated_interaction_statistic
 
+
 class SaturatedDensity(PointProcessDensity):
 
     def __init__(self, R, beta, gamma, saturation):
-        self.R_2 = R ** 2
+        self.R_2 = R**2
         self.R = R
         if beta <= 0:
             raise ValueError("Beta must be positive")

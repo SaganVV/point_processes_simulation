@@ -59,6 +59,7 @@ class RectangleKernelSampler(UniformKernelSampler):
         )
         return np.array((xs, ys)).transpose()
 
+
 class IndexDiscreteSampler(KernelSampler):
     def __init__(self, density=None, rng=None, seed=None):
         super().__init__(rng, seed)
@@ -128,7 +129,7 @@ class StatesKernelSampler(KernelSampler):
             warnings.warn("Extra states beyond density length will be ignored.")
         if len(states) < len(density):
             raise ValueError("Density refers to more states than provided.")
-        #print(states, density)
+        # print(states, density)
         idx = self.sample_idx(config=config, size=size)
         return states[idx]
 
@@ -165,7 +166,7 @@ if __name__ == "__main__":
     #     states=[1, 2, 5, 4], density=lambda config: config / np.sum(config)
     # )
     dcs = StatesKernelSampler.uniform_over(states=[0, 1, 2])
-    #dcs = IndexDiscreteSampler.uniform_over(n=3)
+    # dcs = IndexDiscreteSampler.uniform_over(n=3)
 
     # print(dcs.sample(config=[1, 2, 3], size=10))
     # print(dcs.likelihood_idx(config=[1, 2, 3, 4], value=1))
@@ -173,8 +174,9 @@ if __name__ == "__main__":
 
     from cProfile import Profile
     from pstats import SortKey, Stats
+
     with Profile() as profile:
         for i in range(20000):
-           dcs.sample(config=[1, 2, 3], size=1)
-      #  dcs.sample(config=[1, 2, 3], size=20000)
+            dcs.sample(config=[1, 2, 3], size=1)
+        #  dcs.sample(config=[1, 2, 3], size=20000)
         (Stats(profile).strip_dirs().sort_stats(SortKey.TIME).print_stats())

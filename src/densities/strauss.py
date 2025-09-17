@@ -3,6 +3,7 @@ import numpy as np
 from .base import PointProcessDensity
 from .utils import total_num_of_neighbors
 
+
 class StraussDensity(PointProcessDensity):
 
     def __init__(self, R, beta, gamma):
@@ -31,7 +32,7 @@ class StraussDensity(PointProcessDensity):
     def log_parangelou(self, config, new_point):
         if config.size == 0:
             return self.log_beta
-        dist = np.sum((config - new_point)**2, axis=1)
+        dist = np.sum((config - new_point) ** 2, axis=1)
         return self.log_beta + self.log_gamma * np.sum(dist < self.R**2)
 
     def __repr__(self):

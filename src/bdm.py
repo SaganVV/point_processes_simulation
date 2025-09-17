@@ -67,7 +67,9 @@ class BirthDeathMigration:
     def run(self, num_iter, warm_up=0, callbacks=None):
         if callbacks is None:
             callbacks = []
-        states = self.state_sampler.sample(size=warm_up + num_iter) # wrong, if states not static.
+        states = self.state_sampler.sample(
+            size=warm_up + num_iter
+        )  # wrong, if states not static.
         for i in range(warm_up):
             self.step(new_state=states[i])
         for i in range(warm_up, num_iter):
@@ -124,7 +126,7 @@ class BirthDeathMigration:
             self.density.parangelou(config, new_config[-1])
             * self.state_sampler.likelihood(new_config, BDM_states.DEATH)
             / self.state_sampler.likelihood(config, BDM_states.BIRTH)
-            * self.point_to_remove_sampler.likelihood(new_config, len(new_config)-1)
+            * self.point_to_remove_sampler.likelihood(new_config, len(new_config) - 1)
             / self.new_point_sampler.likelihood(config, new_config[-1])
         )
         return h
@@ -137,10 +139,8 @@ class BirthDeathMigration:
 
         new_config = np.vstack((config, new_point))
 
-        acceptance_probability = min(
-            1, self.__h_birth(config, new_config)
-        )
-        return new_config, acceptance_probability, (new_point, )
+        acceptance_probability = min(1, self.__h_birth(config, new_config))
+        return new_config, acceptance_probability, (new_point,)
 
     def death_step(self, config):
         if len(config) == 0:
@@ -155,18 +155,20 @@ class BirthDeathMigration:
         if len(config) == 0:
             return config, 0, ()
         point_idx, new_point = self.migration_sampler.sample(config=config, size=1)[0]
-#        config[[point_idx, -1]] = config[[-1, point_idx]] #swap
+        #        config[[point_idx, -1]] = config[[-1, point_idx]] #swap
         new_config = config.copy()
         new_config[point_idx] = new_point
 
         h = (
             self.density.log_parangelou(config[:-1], new_point)
-             - self.density.log_parangelou(config[:-1], config[-1])
-    #        self.density.log_mixed_parangelou(config, point_idx, new_point)
-            + np.log(self.migration_sampler.likelihood(
-                new_config, point_idx, config[point_idx]
+            - self.density.log_parangelou(config[:-1], config[-1])
+            #        self.density.log_mixed_parangelou(config, point_idx, new_point)
+            + np.log(
+                self.migration_sampler.likelihood(
+                    new_config, point_idx, config[point_idx]
+                )
+                / self.migration_sampler.likelihood(config, point_idx, new_point)
             )
-            / self.migration_sampler.likelihood(config, point_idx, new_point))
         )
         acceptance_probability = np.exp(min(0, h))
 

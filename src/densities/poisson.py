@@ -1,6 +1,7 @@
 import numpy as np
 from .base import PointProcessDensity
 
+
 class PoissonDensity(PointProcessDensity):
     def __init__(self, beta):
         if beta <= 0:

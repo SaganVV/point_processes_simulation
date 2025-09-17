@@ -15,6 +15,7 @@ from src.densities import (
     HardcoreDensity,
 )
 
+
 def merge_figure_traces(main_fig, fig):
     for trace in fig["data"]:
         main_fig.add_trace(trace)

@@ -13,6 +13,7 @@ class Rectangle(Region):
         self.topright_y = max(y1, y2)
         self.width = width
         self.height = height
+
     def __contains__(self, point):
         return (self.bottomleft_x <= point[0] <= self.topright_x) and (
             self.bottomleft_y <= point[1] <= self.topright_y
