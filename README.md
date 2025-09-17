@@ -65,6 +65,8 @@ The application will open in your default web browser at `http://localhost:8501`
 - **γ (Interaction Strength)**: Repulsion strength between nearby points (0.0 - 1.0)
   - γ = 0: Complete inhibition (hardcore process)
   - γ = 1: No interaction (Poisson process)
+- **s (Saturation)**: Maximum number of neighbors contributing to interaction
+
 
 *All simulations are constrained to the unit square [0,1]² spatial domain.*
 
@@ -76,8 +78,8 @@ The application will open in your default web browser at `http://localhost:8501`
 ## Development
 
 ### Adding New Point Processes
-1. Implement density function in `point_process.py`
-2. Add parameter controls in `app.py`
+1. Implement the new density class in `src/densities/` (create a new file if needed, or add to an existing one).
+2. Add parameter controls in `app.py`.
 3. Update visualization methods as needed.
 ## Support
 
