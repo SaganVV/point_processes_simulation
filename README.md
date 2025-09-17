@@ -4,7 +4,7 @@ An interactive web application for simulating and analyzing spatial point proces
 
 ## Overview
 
-This application implements MCMC simulation of spatial point processes, specifically focusing on the **Strauss point process** using a Birth-Death-Migration (BDM) algorithm. The interactive dashboard allows users to:
+Implements several spatial point process densities (Poisson, Strauss, Saturated, Hardcore) and a Birth-Death-Move MCMC sampler. The interactive dashboard allows users to:
 
 - Configure point process parameters
 - Run MCMC simulations with customizable chain length and burn-in periods
@@ -15,7 +15,6 @@ This application implements MCMC simulation of spatial point processes, specific
 
 ### Prerequisites
 - [pip](https://pip.pypa.io/) or [uv](https://github.com/astral-sh/uv) package manager
----
 
 ### Using uv (Recommended)
 
@@ -50,15 +49,23 @@ The application will open in your default web browser at `http://localhost:8501`
 
 ## Core Components
 
-### `bdm.py` - MCMC Engine
+### `src/samplers/bdm.py` - MCMC Engine
 - `BirthDeathMigration`: Main MCMC simulator class
 - `HistoryTracker`: Simulation history logging
 - `ConfigEvaluator`: Real-time metric computation
 
-### `app.py` - Web Interface
-- Interactive parameter controls
+### `src/densities/` — Point Process Models
+- Contains all implemented point process densities (e.g. **Strauss**, **Poisson**, **Hardcore**, **Saturated Strauss**)
+- Each density is implemented as a class extending a common base interface
+
+### `scripts/app.py` - Web Interface
+- Streamlit-based interactive dashboard
 - Statistical analysis dashboard
 
+### `scripts/performance_tester.py` — Performance Profiler
+- Script for running and storing **cProfile** results of the BDM algorithm
+- Helps identify performance bottlenecks and benchmark optimizations
+- 
 ## Configuration
 
 ### Point Process Parameters
