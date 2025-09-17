@@ -44,7 +44,7 @@ pip install -e .
 
 ### Launch the Web Application
 ```bash
-streamlit run app.py
+streamlit run scripts/app.py
 ```
 The application will open in your default web browser at `http://localhost:8501`.
 
