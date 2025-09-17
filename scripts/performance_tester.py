@@ -1,3 +1,5 @@
+import os
+
 from src.densities import PoissonDensity
 from src.samplers.bdm import BirthDeathMigration, HistoryTracker, ConfigEvaluator
 
@@ -5,7 +7,9 @@ from cProfile import Profile
 from pstats import SortKey, Stats
 import datetime
 
-test_folder = "performance_results\\"
+test_folder = os.path.join(os.path.dirname(__file__), "..", "performance_results")
+os.makedirs(test_folder, exist_ok=True)
+
 if __name__ == "__main__":
     R = 0.1
     beta = 100
@@ -13,19 +17,18 @@ if __name__ == "__main__":
     gamma_saturated = 1.2
     saturation = 3
     random_seed = 42
-    strauss_density = PoissonDensity(beta=beta)
-    # strauss_density = SaturatedDensity(R, beta, gamma=gamma_saturated, saturation=saturation)
-    # strauss_density = StraussDensity(R, beta, gamma)
-    print(strauss_density)
+    density = PoissonDensity(beta=beta)
+    # density = SaturatedDensity(R, beta, gamma=gamma_saturated, saturation=saturation)
+    # density = StraussDensity(R, beta, gamma)
+    print(density)
     num_iter = 40000
-    bdm = BirthDeathMigration(strauss_density, seed=random_seed)
+    bdm = BirthDeathMigration(density, seed=random_seed)
 
     tracker = HistoryTracker()
     num_of_points = ConfigEvaluator(function=lambda config: len(config))
     filename = (
-        test_folder
-        + f"{datetime.datetime.now().strftime("%d-%m-%Y;%H-%M-%S")};func=bdm.run;num_iter={num_iter};{strauss_density!r};.txt"
-    )
+        os.path.join(test_folder, f"{datetime.datetime.now().strftime("%d-%m-%Y;%H-%M-%S")};func=bdm.run;num_iter={num_iter};{density!r};.txt"
+                     ))
     print(filename)
     with Profile() as profile:
         for i, state in enumerate(

@@ -5,9 +5,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-# import sys
-# sys.path.append('../')
-
 from src.samplers.bdm import BirthDeathMigration, HistoryTracker, ConfigEvaluator, BDM_states
 from src.helper import acf_plot, cummean, mcmc_mean_variance_estimator
 
@@ -17,7 +14,6 @@ from src.densities import (
     PoissonDensity,
     HardcoreDensity,
 )
-
 
 def merge_figure_traces(main_fig, fig):
     for trace in fig["data"]:
