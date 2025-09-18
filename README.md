@@ -2,6 +2,18 @@
 
 An interactive web application for simulating and analyzing spatial point processes using Markov Chain Monte Carlo (MCMC) methods with Birth-Death-Migration algorithms.
 
+## 📸 Screenshots
+
+### Simulated Configurations
+![Simulated Configurations](assets/screenshots/simulated_configs.png)
+
+### Number of Points Statistics
+![Number of Points Statistics](assets/screenshots/num_of_points_stats.png)
+
+### MCMC Metrics
+![MCMC Metrics](assets/screenshots/mcmc_stats.png)
+
+
 ## Overview
 
 Implements several spatial point process densities (Poisson, Strauss, Saturated, Hardcore) and a Birth-Death-Move MCMC sampler. The interactive dashboard allows users to:
