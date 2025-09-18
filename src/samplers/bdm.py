@@ -5,7 +5,7 @@ from src.samplers.kernels import (
     IndexDiscreteSampler,
     CompositeKernelSampler,
 )
-from src.samplers.kernels import uniform_probs
+from src.samplers.kernels import uniform_density
 
 from enum import Enum
 
@@ -35,7 +35,7 @@ class BirthDeathMigration:
             new_point_sampler = RectangleKernelSampler(rng=self.rng)
         if point_to_remove_sampler is None:
             point_to_remove_sampler = IndexDiscreteSampler(
-                density=uniform_probs, rng=self.rng
+                density=uniform_density, rng=self.rng
             )
 
         if migration_sampler is None:
@@ -43,7 +43,7 @@ class BirthDeathMigration:
                 config
             )
             migration_sampler = CompositeKernelSampler(
-                kernels=kernels, probs=uniform_probs, rng=self.rng
+                kernels=kernels, probs=uniform_density, rng=self.rng
             )
 
         self.density = density
@@ -155,14 +155,13 @@ class BirthDeathMigration:
         if len(config) == 0:
             return config, 0, ()
         point_idx, new_point = self.migration_sampler.sample(config=config, size=1)[0]
-        #        config[[point_idx, -1]] = config[[-1, point_idx]] #swap
+
+        config[[point_idx, -1]] = config[[-1, point_idx]] #swap
         new_config = config.copy()
-        new_config[point_idx] = new_point
+        new_config[-1] = new_point
 
         h = (
-            self.density.log_parangelou(config[:-1], new_point)
-            - self.density.log_parangelou(config[:-1], config[-1])
-            #        self.density.log_mixed_parangelou(config, point_idx, new_point)
+            self.density.log_mixed_parangelou(config, new_point)
             + np.log(
                 self.migration_sampler.likelihood(
                     new_config, point_idx, config[point_idx]

@@ -1,6 +1,13 @@
 import numpy as np
 from numba import njit, prange
 
+@njit(cache=True)
+def pairwise_squared_distances(config, point):
+    return np.sum((config - point) ** 2, axis=1)
+
+@njit(cache=True)
+def count_within_radius(dists, R):
+    return np.sum(dists < R ** 2)
 
 @njit(cache=True, parallel=True)
 def num_of_neighbors(config: np.ndarray, R: float) -> np.ndarray:
@@ -13,7 +20,6 @@ def num_of_neighbors(config: np.ndarray, R: float) -> np.ndarray:
             c += np.sum((config[i] - config[j]) ** 2) < R_2
         counts[i] = c - 1
     return counts
-
 
 @njit(cache=True)
 def total_num_of_neighbors(config: np.ndarray, R: float) -> int:

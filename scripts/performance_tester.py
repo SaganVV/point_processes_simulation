@@ -1,6 +1,6 @@
 import os
 
-from src.densities import PoissonDensity
+from src.densities import PoissonDensity, StraussDensity, SaturatedDensity
 from src.samplers.bdm import BirthDeathMigration, HistoryTracker, ConfigEvaluator
 
 from cProfile import Profile
@@ -19,9 +19,9 @@ if __name__ == "__main__":
     random_seed = 42
     density = PoissonDensity(beta=beta)
     # density = SaturatedDensity(R, beta, gamma=gamma_saturated, saturation=saturation)
-    # density = StraussDensity(R, beta, gamma)
+    #density = StraussDensity(R, beta, gamma)
     print(density)
-    num_iter = 40000
+    num_iter = 20000
     bdm = BirthDeathMigration(density, seed=random_seed)
 
     tracker = HistoryTracker()

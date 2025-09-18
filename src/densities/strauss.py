@@ -1,7 +1,7 @@
 import numpy as np
 
 from .base import PointProcessDensity
-from .utils import total_num_of_neighbors
+from .utils import total_num_of_neighbors, pairwise_squared_distances, count_within_radius
 
 
 class StraussDensity(PointProcessDensity):
@@ -32,8 +32,11 @@ class StraussDensity(PointProcessDensity):
     def log_parangelou(self, config, new_point):
         if config.size == 0:
             return self.log_beta
-        dist = np.sum((config - new_point) ** 2, axis=1)
-        return self.log_beta + self.log_gamma * np.sum(dist < self.R**2)
+        dist = pairwise_squared_distances(config, new_point)
+        return self.log_beta + self.log_gamma * count_within_radius(dist, self.R)
+
+    def log_mixed_parangelou(self, config: np.ndarray, new_point):
+        return self.log_parangelou(config[:-1], new_point) - self.log_parangelou(config[:-1], config[-1])
 
     def __repr__(self):
         return f"""{self.__class__.__name__}(beta={self.beta},R={self.R},gamma={self.gamma})"""

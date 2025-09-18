@@ -3,10 +3,14 @@ import numpy as np
 import warnings
 from src.regions import Region, Rectangle
 
+from functools import lru_cache
 
-def uniform_probs(config):
-    return np.ones(len(config)) / len(config)
+@lru_cache(maxsize=5)
+def uniform_probs(n):
+    return np.ones(n) / n
 
+def uniform_density(config):
+    return uniform_probs(len(config))
 
 class StaticOrDynamic:
     def __init__(self, value):
