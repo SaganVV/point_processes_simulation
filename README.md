@@ -80,12 +80,11 @@ The application will open in your default web browser at `http://localhost:8501`
 
 ### `scripts/app.py` - Web Interface
 - Streamlit-based interactive dashboard
-- Statistical analysis dashboard
 
 ### `scripts/performance_tester.py` — Performance Profiler
 - Script for running and storing **cProfile** results of the BDM algorithm
 - Helps identify performance bottlenecks and benchmark optimizations
-- 
+
 ## Configuration
 
 ### Point Process Parameters
