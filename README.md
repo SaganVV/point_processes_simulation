@@ -4,25 +4,22 @@ An interactive web application for simulating and analyzing spatial point proces
 
 ## 📸 Screenshots
 
-<div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
-
-  <div style="text-align: center;">
-    <img src="assets/screenshots/simulated_configs.png" width="300" height="200">
-    <p>Simulated Configurations</p>
-  </div>
-
-  <div style="text-align: center;">
-    <img src="assets/screenshots/mcmc_stats.png" width="300">
-    <p>MCMC Performance Metrics</p>
-  </div>
-
-  <div style="text-align: center;">
-    <img src="assets/screenshots/num_of_points_stats.png" width="300">
-    <p>Number of Points Statistics</p>
-  </div>
-
-
-</div>
+<table>
+  <tr>
+    <td align="center">
+      <img src="assets/screenshots/simulated_configs.png" width="300"><br>
+      Simulated Configurations
+    </td>
+    <td align="center">
+      <img src="assets/screenshots/num_of_points_stats.png" width="300"><br>
+      Number of Points Statistics
+    </td>
+    <td align="center">
+      <img src="assets/screenshots/mcmc_stats.png" width="300"><br>
+      MCMC Performance Metrics
+    </td>
+  </tr>
+</table>
 
 
 ## Overview
